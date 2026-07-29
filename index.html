@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0e1a">
+<title>我们的故事</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="loading-screen">
+  <div id="loading-text">正在加载我们的故事……</div>
+<div id="loading-ring">
+  <svg viewBox="0 0 60 60">
+    <circle cx="30" cy="30" r="27"/>
+    <circle class="progress" cx="30" cy="30" r="27"/>
+  </svg>
+</div>
+</div>
+
+<canvas id="main-canvas"></canvas>
+
+<div id="story-title">我们的故事</div>
+
+<div id="timeline-container">
+  <div id="timeline-scroll"></div>
+</div>
+
+<button id="music-toggle" aria-label="音乐"><span class="icon">♪</span></button>
+
+<div id="egg-toast"></div>
+
+<div id="avatar-egg">
+  <img id="avatar-me" class="avatar-pc me" alt="" >
+  <img id="avatar-her" class="avatar-pc her" alt="" >
+</div>
+
+<div id="photo-egg"></div>
+
+<div id="photo-viewer">
+  <button class="close-btn" id="photo-viewer-close">✕</button>
+  <img id="photo-viewer-img" alt="" >
+</div>
+
+<div id="video-screen">
+  <div id="video-intro-text"></div>
+  <video id="memory-video" playsinline muted preload="none"></video>
+  <div id="video-overlay-text"></div>
+</div>
+
+<div id="final-screen">
+  <div class="content">
+    <div class="fl1" id="final-line-1">谢谢你来到我的世界。</div>
+    <div class="fl2" id="final-line-2">愿以后的每一天，<br>都能成为新的纪念日。</div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/particle.js"></script>
+<script src="js/heart.js"></script>
+<script src="js/timeline.js"></script>
+<script src="js/music.js"></script>
+<script src="js/video.js"></script>
+<script src="js/transition.js"></script>
+<script src="js/audioVisualizer.js"></script>
+<script src="js/easterEgg.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
+
+
+
