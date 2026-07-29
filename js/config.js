@@ -1,4 +1,4 @@
-var CONFIG = {
+﻿var CONFIG = {
   timeline: {
     firstMeet: '2026-07-23T04:31:00+08:00',
     becomeCouple: '2026-07-27T00:00:00+08:00'
@@ -51,7 +51,7 @@ var CONFIG = {
   paths: {
     avatarMe: 'assets/avatar/me.jpg',
     avatarHer: 'assets/avatar/her.jpg',
-    photos: [ 'assets/photo/1.jpg', 'assets/photo/2.jpg', 'assets/photo/3.png' ],
+    photos: [ 'assets/photo/1.jpg', 'assets/photo/2.jpg', 'assets/photo/3.jpg' ],
     video: 'assets/video/memory.mp4',
     music: 'assets/music/music.mp3'
   },
@@ -96,3 +96,4 @@ var CONFIG = {
     throttleInterval: 16
   }
 };
+
