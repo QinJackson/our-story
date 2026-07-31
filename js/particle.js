@@ -101,28 +101,35 @@ class ParticleSystem {
     }
   }
 
-  /* --- Text particles with trails --- */
+  /* --- Text particles with trails + lifecycle --- */
   _mkText() {
     this.msgs = [];
     var list = CONFIG.messages;
     for (var i = 0; i < list.length; i++) {
-      var h = CONFIG.colors.textHueRange[0] + Math.random() * (CONFIG.colors.textHueRange[1] - CONFIG.colors.textHueRange[0]);
-      var l = CONFIG.colors.textLightness[0] + Math.random() * (CONFIG.colors.textLightness[1] - CONFIG.colors.textLightness[0]);
-      var fs = CONFIG.particles.msgMinFont + Math.random() * (CONFIG.particles.msgMaxFont - CONFIG.particles.msgMinFont);
-      var trail = [];
-      for (var t = 0; t < 5; t++) trail.push({ x: 0, y: 0 });
-      this.msgs.push({
-        text: list[i], fontSize: fs,
-        color: 'hsl(' + h + ',' + CONFIG.colors.textSaturation + '%,' + l + '%)',
-        alpha: 0, targetAlpha: Math.random() * 0.45 + 0.4,
-        x: Math.random() * this.W, y: Math.random() * this.H,
-        vx: (Math.random() - 0.5) * 0.7, vy: (Math.random() - 0.5) * 0.7 - 0.15,
-        ph: Math.random() * Math.PI * 2, floatSpd: Math.random() * 0.002 + 0.001,
-        hi: Math.floor(Math.random() * this.heartPoints.length),
-        tx: this.cx, ty: this.cy,
-        trail: trail, trailIdx: 0
-      });
+      this.msgs.push(this._newTextParticle(list[i]));
     }
+  }
+
+  _newTextParticle(text) {
+    var h = CONFIG.colors.textHueRange[0] + Math.random() * (CONFIG.colors.textHueRange[1] - CONFIG.colors.textHueRange[0]);
+    var l = CONFIG.colors.textLightness[0] + Math.random() * (CONFIG.colors.textLightness[1] - CONFIG.colors.textLightness[0]);
+    var fs = CONFIG.particles.msgMinFont + Math.random() * (CONFIG.particles.msgMaxFont - CONFIG.particles.msgMinFont);
+    var trail = [];
+    for (var t = 0; t < 5; t++) trail.push({ x: 0, y: 0 });
+    var maxLife = 8000 + Math.random() * 6000;
+    return {
+      text: text, fontSize: fs,
+      color: 'hsl(' + h + ',' + CONFIG.colors.textSaturation + '%,' + l + '%)',
+      alpha: 0, targetAlpha: Math.random() * 0.45 + 0.4,
+      x: Math.random() * this.W, y: Math.random() * this.H,
+      vx: (Math.random() - 0.5) * 0.7, vy: (Math.random() - 0.5) * 0.7 - 0.15,
+      ph: Math.random() * Math.PI * 2, floatSpd: Math.random() * 0.002 + 0.001,
+      hi: Math.floor(Math.random() * this.heartPoints.length),
+      tx: this.cx, ty: this.cy,
+      trail: trail, trailIdx: 0,
+      life: 0, maxLife: maxLife,
+      born: Date.now()
+    };
   }
 
   _mkOrbiters() {
@@ -195,21 +202,40 @@ class ParticleSystem {
   }
 
   _updFloat(ts) {
+    var now = Date.now();
     for (var i = 0; i < this.msgs.length; i++) {
       var p = this.msgs[i];
-      if (p.alpha < p.targetAlpha) p.alpha = Math.min(p.targetAlpha, p.alpha + 0.006);
+      p.life = now - p.born;
+      // 生命周期:淡入(前15%)→稳定→淡出(后25%)
+      var lp = p.life / p.maxLife;
+      if (lp < 0.15) {
+        p.alpha = p.targetAlpha * (lp / 0.15);
+      } else if (lp > 0.75) {
+        p.alpha = p.targetAlpha * Math.max(0, (1 - lp) / 0.25);
+      } else {
+        p.alpha = p.targetAlpha;
+      }
+      // 生命周期结束:重生
+      if (lp >= 1) {
+        this.msgs[i] = this._newTextParticle(p.text);
+        continue;
+      }
       p.trail[p.trailIdx] = { x: p.x, y: p.y };
       p.trailIdx = (p.trailIdx + 1) % p.trail.length;
-      p.x += p.vx + Math.sin(ts * p.floatSpd + p.ph) * 0.25;
-      p.y += p.vy + Math.cos(ts * p.floatSpd * 0.8 + p.ph * 1.2) * 0.18;
+      // 自然运动:多频正弦扰动模拟流体
+      p.x += p.vx + Math.sin(ts * p.floatSpd + p.ph) * 0.25 + Math.sin(ts * p.floatSpd * 2.3 + p.ph) * 0.08;
+      p.y += p.vy + Math.cos(ts * p.floatSpd * 0.8 + p.ph * 1.2) * 0.18 + Math.cos(ts * p.floatSpd * 1.7 + p.ph) * 0.06;
       if (p.x < -200) p.x = this.W + 200;
       if (p.x > this.W + 200) p.x = -200;
       if (p.y < -100) p.y = this.H + 100;
       if (p.y > this.H + 100) p.y = -100;
-      p.vx += (Math.random() - 0.5) * 0.015;
-      p.vy += (Math.random() - 0.5) * 0.015;
-      p.vx = Math.max(-0.8, Math.min(0.8, p.vx));
-      p.vy = Math.max(-0.8, Math.min(0.8, p.vy));
+      // 自然扰动:微小随机加速度 + 阻尼
+      p.vx += (Math.random() - 0.5) * 0.012;
+      p.vy += (Math.random() - 0.5) * 0.012;
+      p.vx *= 0.995;
+      p.vy *= 0.995;
+      p.vx = Math.max(-0.7, Math.min(0.7, p.vx));
+      p.vy = Math.max(-0.7, Math.min(0.7, p.vy));
     }
   }
 

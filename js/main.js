@@ -1,4 +1,9 @@
-
+/**
+ * 主控制器
+ * 时间配置统一来自 CONFIG.timing
+ * 状态管理委托 STATE
+ * 场景过渡委托 TRANSITION
+ */
 (function() {
   'use strict';
 
@@ -6,7 +11,7 @@
   var diary, futureLetter, mood, gallery, home, calendar;
   var viz = null;
   var rafId = null;
-  var phase = 'init';
+  var lastTs = 0;
 
   var loading = document.getElementById('loading-screen');
   var storyTitle = document.getElementById('story-title');
@@ -20,34 +25,47 @@
     timeline.build();
     video = new VideoManager();
     eggs = new EasterEggManager(ps, heart, video, music);
-        // Phase 3 modules
-    diary = new DiaryManager();
-    diary.load(function() {
-      // 暴露日记数据给相册
-      window.__diaryData = diary.data;
-      _showChoice();
+
+    // Phase 3 模块:先初始化存储,再加载日记
+    STORAGE.initPhotoStore(function(store, ok) {
+      diary = new DiaryManager();
+      diary.photoStore = store;
+      diary.load(function() {
+        window.__diaryData = diary.data;
+        // diary 就绪后才创建依赖它的模块,避免引用 undefined
+        calendar = new CalendarManager(diary, mood, gallery);
+        home = new HomeManager(diary, futureLetter, mood, gallery, calendar);
+        window.__diary = diary;
+        window.__showHome = function() { if (home) home.show(); };
+        _showChoice();
+      });
     });
+
     futureLetter = new FutureLetterManager(null);
     mood = new MoodManager();
     gallery = new GalleryManager();
-    calendar = new CalendarManager(diary, mood, gallery);
-    home = new HomeManager(diary, futureLetter, mood, gallery, calendar);
-    window.__diary = diary;
     window.__showHome = function() { if (home) home.show(); };
-  // Photo viewer close
-  document.getElementById('photo-viewer-close').addEventListener('click', function() { eggs.closeViewer(); });
-  document.getElementById('photo-viewer').addEventListener('click', function(e) {
-    if (e.target === e.currentTarget) eggs.closeViewer();
-  });
 
+    // Photo viewer close
+    document.getElementById('photo-viewer-close').addEventListener('click', function() { eggs.closeViewer(); });
+    document.getElementById('photo-viewer').addEventListener('click', function(e) {
+      if (e.target === e.currentTarget) eggs.closeViewer();
+    });
 
+    STATE.setPhase('loading');
     ps.setPhase('loading');
     _loop(0);
   }
 
   /* ===== 加载完成后显示选择:看动画 / 直接进入 ===== */
   function _showChoice() {
-    phase = 'choose';
+    STATE.setPhase('choose');
+    // 禁用主画布指针事件,确保按钮可点击
+    var mainCanvas = document.getElementById('main-canvas');
+    if (mainCanvas) mainCanvas.style.pointerEvents = 'none';
+    var uiLayer = document.getElementById('ui-layer');
+    if (uiLayer) uiLayer.style.pointerEvents = 'none';
+
     var choice = document.getElementById('loading-choice');
     var loadingText = document.getElementById('loading-text');
     var loadingRing = document.getElementById('loading-ring');
@@ -64,98 +82,111 @@
       _start();
     });
     if (skipBtn) skipBtn.addEventListener('click', function() {
-      loading.classList.add('hidden');
-      home.show();
+      TRANSITION.start('fade', CONFIG.timing.transitionDuration, function() {
+        loading.classList.add('hidden');
+        home.show();
+      });
     });
   }
 
-  /* ===== 1. 鍔犺浇 ===== */
+  /* ===== 1. 加载 ===== */
   function _start() {
-    phase = 'loading';
+    STATE.setPhase('loading');
     ps.setPhase('loading');
     setTimeout(function() {
-      loading.classList.add('hidden');
-      setTimeout(_float, 1500);
+      TRANSITION.start('fade', CONFIG.timing.transitionDuration, function() {
+        loading.classList.add('hidden');
+        setTimeout(_float, CONFIG.timing.loadingFadeToFloat);
+      });
     }, CONFIG.timing.loadingDuration);
   }
 
-  /* ===== 2. 鏂囧瓧鏄熸捣婕傛诞 ===== */
+  /* ===== 2. 文字星海漂浮 ===== */
   function _float() {
-    phase = 'floating';
+    STATE.setPhase('floating');
     ps.setPhase('floating');
     setTimeout(_converge, CONFIG.timing.floatDuration);
   }
 
-  /* ===== 3. 姹囪仛鎴愬績 ===== */
+  /* ===== 3. 汇聚成心 ===== */
   function _converge() {
-    phase = 'converging';
+    STATE.setPhase('converging');
     ps.setPhase('converging');
     setTimeout(function() {
-      phase = 'heart';
+      STATE.setPhase('heart');
       ps.setPhase('heart');
       heart.fadeIn();
 
-      setTimeout(function() { storyTitle.classList.add('visible'); }, 1000);
+      setTimeout(function() {
+        storyTitle.classList.add('visible');
+      }, CONFIG.timing.storyTitleVisibleDelay);
+
       setTimeout(function() {
         storyTitle.classList.remove('visible');
-        setTimeout(_showTimeline, 800);
-      }, 4000);
-    }, CONFIG.timing.convergeDuration + 1500);
+        TRANSITION.start('radial', CONFIG.timing.transitionDuration, function() {
+          setTimeout(_showTimeline, CONFIG.timing.storyTitleHideToTimeline);
+        });
+      }, CONFIG.timing.storyTitleHoldDuration);
+    }, CONFIG.timing.convergeDuration + CONFIG.timing.heartFormExtraDelay);
   }
 
-  /* ===== 4. 鏃堕棿杞达紙鏂囧瓧鏄熸捣缁х画婕傛诞锛?===== */
+  /* ===== 4. 时间轴 ===== */
   var _tlShown = false;
   function _showTimeline() {
     if (_tlShown) return;
     _tlShown = true;
-    phase = 'timeline';
+    STATE.setPhase('timeline');
     ps.setPhase('timeline');
     timeline.show();
-    setTimeout(_showAvatar, 10000);
+    setTimeout(_showAvatar, CONFIG.timing.timelineDuration);
   }
 
-  /* ===== 5. 澶村儚锛堝仠鐣?绉掞級 ===== */
+  /* ===== 5. 头像 ===== */
   function _showAvatar() {
     timeline.hide();
     eggs.triggerAvatar(function() {
-      setTimeout(_showPhotos, 8000);
+      setTimeout(_showPhotos, CONFIG.timing.avatarDuration);
     });
   }
 
-  /* ===== 6. 鐓х墖锛堝仠鐣?绉掞級 ===== */
+  /* ===== 6. 照片 ===== */
   function _showPhotos() {
     eggs.triggerPhotos(function() {
-      setTimeout(_startVideo, 8000);
+      setTimeout(_startVideo, CONFIG.timing.photosDuration);
     });
   }
 
-  /* ===== 7. 鎾斁MV锛堟枃瀛楁槦娴疯瑙嗛瑕嗙洊锛?===== */
+  /* ===== 7. 播放 MV ===== */
   function _startVideo() {
     music.pause();
     eggs.triggerVideo(function() {
       music.resume();
-      setTimeout(_showFinal, 2000);
+      setTimeout(_showFinal, CONFIG.timing.videoEndToFinalDelay);
     });
   }
 
-  /* ===== 8. 鏈€缁堢粨灏?鈫?鏂囧瓧鏄熸捣鍥炲綊 ===== */
+  /* ===== 8. 最终结尾 ===== */
   function _showFinal() {
     eggs.triggerFinal();
   }
 
-  /* ===== 鍔ㄧ敾寰幆 ===== */
+  /* ===== 动画循环 ===== */
   function _loop(ts) {
+    var dt = ts - lastTs;
+    lastTs = ts;
     if (viz) viz.update();
     ps.update(ts);
     ps.draw(ts);
+    var phase = STATE.getPhase();
     if (phase === 'heart' || phase === 'timeline') {
       heart.drawGlow(ts);
       heart.drawBeat(ts);
     }
+    TRANSITION.update(dt);
     rafId = requestAnimationFrame(_loop);
   }
 
-  /* ===== 鍚姩 ===== */
+  /* ===== 启动 ===== */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
@@ -163,5 +194,3 @@
   }
   addEventListener('load', function() { if (ps) ps._resize(); });
 })();
-
-

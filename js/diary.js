@@ -33,16 +33,31 @@ function DiaryManager() {
     { emoji: '🎉', label: '兴奋' },
     { emoji: '🌙', label: '夜晚' }
   ];
+  this.weatherOptions = [
+    { emoji: '☀️', label: '晴' },
+    { emoji: '⛅', label: '多云' },
+    { emoji: '☁️', label: '阴' },
+    { emoji: '🌧', label: '雨' },
+    { emoji: '⛈', label: '雷雨' },
+    { emoji: '❄️', label: '雪' },
+    { emoji: '🌫', label: '雾' },
+    { emoji: '🌬', label: '风' }
+  ];
+  this._editingWeather = '';
+  this._editingSong = '';
 }
 
 /* ===== 加载数据:IndexedDB 初始化 + diary.json + localStorage ===== */
 DiaryManager.prototype.load = function(callback) {
   var self = this;
   this._loadUser();
-  this.photoStore = new PhotoStore();
-  this.photoStore.init(function() {
-    self._loadDiaryJson(callback);
-  });
+  // photoStore 已由 main.js 通过 STORAGE 初始化并注入,避免重复创建
+  if (!this.photoStore) {
+    this.photoStore = new PhotoStore();
+    this.photoStore.init(function() { self._loadDiaryJson(callback); });
+  } else {
+    this._loadDiaryJson(callback);
+  }
 };
 
 DiaryManager.prototype._loadDiaryJson = function(callback) {
@@ -77,21 +92,11 @@ DiaryManager.prototype._loadDiaryJson = function(callback) {
 };
 
 DiaryManager.prototype._loadUser = function() {
-  try {
-    var saved = localStorage.getItem(this.storageKey);
-    this.userEntries = saved ? JSON.parse(saved) : [];
-  } catch(e) {
-    this.userEntries = [];
-  }
+  this.userEntries = STORAGE.loadDiary() || [];
 };
 
 DiaryManager.prototype._saveUser = function() {
-  try {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.userEntries));
-    return true;
-  } catch(e) {
-    return false;
-  }
+  return STORAGE.saveDiary(this.userEntries);
 };
 
 DiaryManager.prototype._merge = function() {
@@ -177,6 +182,8 @@ DiaryManager.prototype._renderBook = function() {
     page.dataset.id = entry.id;
 
     var mood = entry.mood ? '<div class="diary-entry-mood">' + entry.mood + '</div>' : '';
+    var weather = entry.weather ? '<div class="diary-entry-weather">' + entry.weather + '</div>' : '';
+    var song = entry.song ? '<div class="diary-entry-song">🎵 ' + self._escapeHtml(entry.song) + '</div>' : '';
     var photos = '';
     if (entry.photos && entry.photos.length > 0) {
       photos = '<div class="diary-entry-photos">';
@@ -191,13 +198,16 @@ DiaryManager.prototype._renderBook = function() {
       photos += '</div>';
     }
 
+    var metaLine = (mood || weather) ? '<div class="diary-entry-meta">' + mood + weather + '</div>' : '';
+
     var editBtn = entry.isPreset ? '' : '<div class="diary-entry-edit" data-id="' + entry.id + '">✏️ 编辑 / 删除</div>';
 
     page.innerHTML =
       '<div class="diary-entry-date">' + self._formatDate(entry.date) + '</div>' +
       '<div class="diary-entry-title">' + entry.title + '</div>' +
-      mood +
+      metaLine +
       '<div class="diary-entry-content">' + self._formatContent(entry.content) + '</div>' +
+      song +
       photos +
       editBtn;
 
@@ -308,6 +318,8 @@ DiaryManager.prototype.openEditor = function(date, entry, onSaved) {
   this._editingEntry = entry || null;
   this._editingImages = entry && entry.photos ? entry.photos.slice(0) : [];
   this._editingMood = entry && entry.mood ? entry.mood : '';
+  this._editingWeather = entry && entry.weather ? entry.weather : '';
+  this._editingSong = entry && entry.song ? entry.song : '';
   var editDate = date || (entry && entry.date) || this._todayStr();
 
   var overlay = document.createElement('div');
@@ -332,6 +344,14 @@ DiaryManager.prototype.openEditor = function(date, entry, onSaved) {
         '<label class="editor-label">心情</label>' +
         '<div class="editor-mood-options" id="editor-mood-options"></div>' +
       '</div>' +
+      '<div class="editor-row">' +
+        '<label class="editor-label">天气</label>' +
+        '<div class="editor-mood-options" id="editor-weather-options"></div>' +
+      '</div>' +
+      '<div class="editor-row">' +
+        '<label class="editor-label">歌曲</label>' +
+        '<input type="text" class="editor-song-input" id="editor-song" placeholder="今天在听的歌（可选）" maxlength="60">' +
+      '</div>' +
       '<input type="text" class="editor-title-input" id="editor-title" placeholder="给这一天起个标题" maxlength="40">' +
       '<textarea class="editor-content" id="editor-content" placeholder="写下今天的故事……" maxlength="2000"></textarea>' +
       '<div class="editor-photo-section">' +
@@ -346,6 +366,7 @@ DiaryManager.prototype.openEditor = function(date, entry, onSaved) {
   if (entry) {
     overlay.querySelector('#editor-title').value = entry.title || '';
     overlay.querySelector('#editor-content').value = entry.content || '';
+    overlay.querySelector('#editor-song').value = entry.song || '';
   }
 
   var moodBox = overlay.querySelector('#editor-mood-options');
@@ -365,6 +386,26 @@ DiaryManager.prototype.openEditor = function(date, entry, onSaved) {
       }
     });
     moodBox.appendChild(btn);
+  });
+
+  // 天气选择
+  var weatherBox = overlay.querySelector('#editor-weather-options');
+  this.weatherOptions.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.className = 'editor-mood-btn' + (self._editingWeather === opt.emoji ? ' selected' : '');
+    btn.innerHTML = '<span class="editor-mood-emoji">' + opt.emoji + '</span>';
+    btn.setAttribute('data-emoji', opt.emoji);
+    btn.addEventListener('click', function() {
+      var allBtns = weatherBox.querySelectorAll('.editor-mood-btn');
+      for (var i = 0; i < allBtns.length; i++) allBtns[i].classList.remove('selected');
+      if (self._editingWeather === opt.emoji) {
+        self._editingWeather = '';
+      } else {
+        self._editingWeather = opt.emoji;
+        btn.classList.add('selected');
+      }
+    });
+    weatherBox.appendChild(btn);
   });
 
   // 渲染已有图片(先渲染直接 URL,IndexedDB 图片异步加载后补显)
@@ -481,6 +522,7 @@ DiaryManager.prototype._saveFromEditor = function(onSaved) {
   var title = this.editor.querySelector('#editor-title').value.trim();
   var content = this.editor.querySelector('#editor-content').value.trim();
   var date = this.editor.querySelector('#editor-date').value;
+  var song = this.editor.querySelector('#editor-song').value.trim();
   if (!date) { alert('请选择日期'); return; }
   if (!title && !content) { alert('请填写标题或内容'); return; }
 
@@ -490,6 +532,8 @@ DiaryManager.prototype._saveFromEditor = function(onSaved) {
     title: title || '无题',
     content: content,
     mood: this._editingMood,
+    weather: this._editingWeather,
+    song: song,
     photos: []
   };
 
@@ -555,6 +599,8 @@ DiaryManager.prototype._closeEditor = function() {
   this._editingEntry = null;
   this._editingImages = [];
   this._editingMood = '';
+  this._editingWeather = '';
+  this._editingSong = '';
 };
 
 /* ===== 数据操作 ===== */
@@ -629,6 +675,15 @@ DiaryManager.prototype._formatDate = function(dateStr) {
 DiaryManager.prototype._formatContent = function(content) {
   if (!content) return '';
   return content.replace(/\n/g, '<br>');
+};
+
+DiaryManager.prototype._escapeHtml = function(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 };
 
 DiaryManager.prototype._showPhoto = function(src) {

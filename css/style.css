@@ -367,6 +367,12 @@ html,body{
 .diary-entry-date{font-size:13px;color:#b08a62;letter-spacing:1px;margin-bottom:8px}
 .diary-entry-title{font-size:clamp(18px,4.5vw,22px);font-weight:600;color:#4a3a2a;margin-bottom:10px;line-height:1.4}
 .diary-entry-mood{font-size:24px;margin-bottom:10px}
+.diary-entry-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.diary-entry-meta .diary-entry-mood{margin-bottom:0}
+.diary-entry-weather{font-size:22px}
+.diary-entry-song{font-size:13px;color:#8a6f4d;margin-bottom:12px;font-style:italic}
+.editor-song-input{width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;margin-top:6px}
+.editor-song-input:focus{outline:none;border-color:rgba(255,107,138,0.4)}
 .diary-entry-content{font-size:clamp(14px,3.5vw,15px);line-height:1.9;color:#5c4b38;margin-bottom:14px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical}
 .diary-entry-photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .diary-entry-photo{width:72px;height:72px;border-radius:10px;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,0.2);cursor:pointer}

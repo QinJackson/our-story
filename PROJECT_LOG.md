@@ -110,6 +110,43 @@ git push origin main
 
 ## 📅 五、更新日志
 
+### 2026-07-31 · v2.3 架构重构 + 日记增强 + 粒子优化(GLM)
+
+**架构重构:**
+- ✅ [config.js](file:///js/config.js) 统一时间配置:main.js 中所有硬编码时间迁移到 CONFIG.timing
+- ✅ [state.js](file:///js/state.js) 新增:统一管理项目状态(phase),支持监听器
+- ✅ [storage.js](file:///js/storage.js) 新增:统一存储管理(diary/mood/photo/futureLetter)
+  - 封装 localStorage 和 IndexedDB,提供统一 load/save/delete 接口
+  - 内部根据数据类型自动分发到对应存储后端
+- ✅ [transition.js](file:///js/transition.js) 正式接入主流程
+  - 场景切换时调用 TRANSITION.start() 实现过渡动画(fade/radial/wipe)
+  - 动画循环中调用 TRANSITION.update(dt) 驱动过渡
+
+**日记增强(核心功能):**
+- ✅ [diary.js](file:///js/diary.js) 新增字段:
+  - `weather`: 天气选择(☀️⛅☁️🌧⛈❄️🌫🌬)
+  - `song`: 歌曲输入(今天在听的歌)
+  - 完整字段:date / weather / mood / song / content / photos
+- ✅ 编辑器 UI 增加:天气选择按钮组、歌曲输入框
+- ✅ 故事书页面显示:心情+天气同行显示、歌曲斜体显示
+- ✅ 接入 STORAGE 模块:数据持久化委托统一存储
+- ✅ 修复异步初始化:diary 就绪后才创建依赖模块(home/calendar)
+
+**粒子优化:**
+- ✅ [particle.js](file:///js/particle.js) 增加粒子生命周期
+  - 生命周期:淡入(前15%)→稳定→淡出(后25%)→重生
+  - 淡入淡出:基于生命周期计算 alpha
+  - 自然运动:多频正弦扰动 + 微小随机加速度 + 速度阻尼
+  - 重生机制:生命周期结束后在新位置重生
+
+**验收:**
+- ✅ 开场动画正常(观看/跳过选择)
+- ✅ 日记正常(含 weather/song 新字段)
+- ✅ 相册正常(网格视图)
+- ✅ 日历正常(整月显示)
+- ✅ 无 JS 错误
+- ✅ 新增数据无需修改核心代码(config.js 统一配置)
+
 ### 2026-07-31 · v2.2 日历系统 + IndexedDB 图片存储 + 相册重构(GLM)
 
 **新增模块:**

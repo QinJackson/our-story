@@ -1,4 +1,4 @@
-﻿var CONFIG = {
+var CONFIG = {
   timeline: {
     firstMeet: '2026-07-23T04:31:00+08:00',
     becomeCouple: '2026-07-27T00:00:00+08:00'
@@ -77,13 +77,23 @@
   },
   timing: {
     loadingDuration: 5000,
+    loadingFadeToFloat: 1500,
     floatDuration: 12000,
     convergeDuration: 7000,
+    heartFormExtraDelay: 1500,
+    storyTitleVisibleDelay: 1000,
+    storyTitleHoldDuration: 4000,
+    storyTitleHideToTimeline: 800,
+    timelineDuration: 10000,
+    avatarDuration: 8000,
+    photosDuration: 8000,
+    videoEndToFinalDelay: 2000,
     heartFormDelay: 2000,
     timelineDelay: 2500,
     videoIntroDisplay: 3000,
     videoFadeTransition: 1500,
-    finalDisplay: 10000
+    finalDisplay: 10000,
+    transitionDuration: 800
   },
   eggs: {
     tripleClickThreshold: 3,
