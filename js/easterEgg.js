@@ -159,6 +159,7 @@ class EasterEggManager {
           self.finalScreen.classList.remove('active');
           // 鍥炲綊锛氭樉绀哄ご鍍忓拰鐓х墖鍗＄墖
           self._showFinalScene();
+            if (window.__showHome) window.__showHome();
         }, 1200);
       }, CONFIG.timing.finalDisplay);
     }, 500);
@@ -199,5 +200,6 @@ class EasterEggManager {
 }
 
 window.EasterEggManager = EasterEggManager;
+
 
 

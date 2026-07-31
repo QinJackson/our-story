@@ -3,6 +3,7 @@
   'use strict';
 
   var ps, heart, timeline, music, video, eggs;
+  var diary, futureLetter, mood, gallery, home;
   var rafId = null;
   var phase = 'init';
 
@@ -17,6 +18,17 @@
     music = new MusicManager();
     video = new VideoManager();
     eggs = new EasterEggManager(ps, heart, video, music);
+        // Phase 3 modules
+    diary = new DiaryManager();
+    diary.load(function() {
+      // 暴露日记数据给相册
+      window.__diaryData = diary.data;
+    });
+    futureLetter = new FutureLetterManager(null);
+    mood = new MoodManager();
+    gallery = new GalleryManager();
+    home = new HomeManager(diary, futureLetter, mood, gallery);
+    window.__diary = diary;
   // Photo viewer close
   document.getElementById('photo-viewer-close').addEventListener('click', function() { eggs.closeViewer(); });
   document.getElementById('photo-viewer').addEventListener('click', function(e) {
@@ -121,4 +133,5 @@
   }
   addEventListener('load', function() { if (ps) ps._resize(); });
 })();
+
 
