@@ -133,16 +133,15 @@ CalendarManager.prototype._mkCell = function(year, month, day, isOther, todayKey
   cell.className = 'cal-day' + (isOther ? ' other-month' : '') + (dateKey === todayKey ? ' today' : '') + (dateKey === this.selectedDate ? ' selected' : '') + (hasContent ? ' has-content' : '');
   cell.setAttribute('data-date', dateKey);
 
-  // 心情 emoji 直接显示在日期下方(大)
-  var moodDisplay = info.hasMood ? '<div class="cal-day-mood">' + info.moodEmoji + '</div>' : '';
+  // 心情 emoji 与日期数字同排显示
+  var moodDisplay = info.hasMood ? '<span class="cal-day-mood">' + info.moodEmoji + '</span>' : '';
   // 日记/照片用彩色圆点指示(底部)
   var dots = '';
   if (info.hasDiary) dots += '<span class="cal-dot cal-dot-diary" title="有日记"></span>';
   if (info.hasPhoto) dots += '<span class="cal-dot cal-dot-photo" title="有照片"></span>';
 
   cell.innerHTML =
-    '<span class="cal-day-num">' + day + '</span>' +
-    moodDisplay +
+    '<div class="cal-day-top"><span class="cal-day-num">' + day + '</span>' + moodDisplay + '</div>' +
     (dots ? '<div class="cal-day-dots">' + dots + '</div>' : '');
 
   cell.addEventListener('click', function() {
