@@ -65,13 +65,22 @@
     if (mainCanvas) mainCanvas.style.pointerEvents = 'none';
     var uiLayer = document.getElementById('ui-layer');
     if (uiLayer) uiLayer.style.pointerEvents = 'none';
+    // 显式确保 loading-screen 和按钮可点击
+    var loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+      loadingScreen.classList.remove('hidden');
+      loadingScreen.style.pointerEvents = 'auto';
+    }
 
     var choice = document.getElementById('loading-choice');
     var loadingText = document.getElementById('loading-text');
     var loadingRing = document.getElementById('loading-ring');
     if (loadingText) loadingText.style.display = 'none';
     if (loadingRing) loadingRing.style.display = 'none';
-    if (choice) choice.style.display = 'flex';
+    if (choice) {
+      choice.style.display = 'flex';
+      choice.style.pointerEvents = 'auto';
+    }
 
     var watchBtn = document.getElementById('loading-watch');
     var skipBtn = document.getElementById('loading-skip');
