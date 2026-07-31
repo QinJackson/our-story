@@ -57,6 +57,7 @@ GalleryManager.prototype.close = function() {
 
 /* ===== 收集照片 ===== */
 GalleryManager.prototype._collectPhotos = function() {
+  var self = this;
   this.photos = [];
 
   // 原有照片
@@ -64,7 +65,6 @@ GalleryManager.prototype._collectPhotos = function() {
   existing.forEach(function(p) { self.photos.push(p); });
 
   // 日记照片（需要从全局拿到 diary 数据）
-  var self = this;
   if (window.__diaryData && window.__diaryData.entries) {
     window.__diaryData.entries.forEach(function(entry) {
       if (entry.photos) {

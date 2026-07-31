@@ -11,7 +11,21 @@ function AudioVisualizer(audioElement) {
   this.midFreq = 0;
   this.highFreq = 0;
   this._init();
+  this._bindResume();
 }
+
+/* 用户交互后 resume AudioContext（浏览器自动播放策略限制） */
+AudioVisualizer.prototype._bindResume = function() {
+  if (!this.ctx) return;
+  var self = this;
+  var resume = function() {
+    if (self.ctx && self.ctx.state === 'suspended') {
+      self.ctx.resume().catch(function() {});
+    }
+  };
+  document.addEventListener('touchstart', resume, { once: true });
+  document.addEventListener('click', resume, { once: true });
+};
 
 AudioVisualizer.prototype._init = function() {
   try {

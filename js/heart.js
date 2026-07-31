@@ -1,10 +1,11 @@
-﻿/**
+/**
  * 爱心呼吸与脉冲发光
  */
 
 class HeartAnimation {
-  constructor(ps) {
+  constructor(ps, viz) {
     this.ps = ps;
+    this.viz = viz || null;
     this.ctx = ps.ctx;
     this.alpha = 0;
     this.glowParticles = [];
@@ -24,7 +25,8 @@ class HeartAnimation {
   drawGlow(ts) {
     if (this.alpha <= 0) return;
     const ctx = this.ctx;
-    const breath = 1 + Math.sin(this.ps.breath) * CONFIG.particles.breathAmplitude;
+    const vizAvg = (this.viz && this.viz.ready) ? this.viz.avgFreq : 0;
+    const breath = 1 + Math.sin(this.ps.breath) * CONFIG.particles.breathAmplitude + vizAvg * 0.12;
     const scale = Math.min(this.ps.W, this.ps.H) * 0.18 * breath;
     const cx = this.ps.cx, cy = this.ps.cy;
     const aa = this.alpha;
@@ -62,11 +64,13 @@ class HeartAnimation {
     if (this.alpha <= 0) return;
     const ctx = this.ctx;
     const cx = this.ps.cx, cy = this.ps.cy;
+    const vizBeat = (this.viz && this.viz.ready) ? this.viz.lowFreq : 0;
     const pulse = (Date.now() * 0.002) % (Math.PI * 2);
+    const beatBoost = 1 + vizBeat * 0.6;
     const wr = Math.min(this.ps.W, this.ps.H) * 0.18 *
       (1 + CONFIG.particles.breathAmplitude) *
-      (1 + 0.15 * Math.pow(Math.sin(pulse), 4));
-    const wa = 0.12 * Math.pow(Math.abs(Math.cos(pulse)), 3) * this.alpha;
+      (1 + 0.15 * Math.pow(Math.sin(pulse), 4)) * beatBoost;
+    const wa = (0.12 + vizBeat * 0.18) * Math.pow(Math.abs(Math.cos(pulse)), 3) * this.alpha;
     if (wa > 0.01) {
       const gw = ctx.createRadialGradient(cx, cy, wr * 0.7, cx, cy, wr * 1.1);
       gw.addColorStop(0, 'rgba(255,80,130,0)');

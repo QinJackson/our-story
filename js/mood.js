@@ -92,6 +92,7 @@ MoodManager.prototype._renderOptions = function() {
 };
 
 MoodManager.prototype._renderStats = function() {
+  var self = this;
   var el = document.getElementById('mood-stats');
   if (!el) return;
 
@@ -158,7 +159,11 @@ MoodManager.prototype._today = function() {
 };
 
 MoodManager.prototype._dateKey = function(d) {
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  var mm = m < 10 ? '0' + m : '' + m;
+  var dd = day < 10 ? '0' + day : '' + day;
+  return d.getFullYear() + '-' + mm + '-' + dd;
 };
 
 MoodManager.prototype._weekday = function(d) {
