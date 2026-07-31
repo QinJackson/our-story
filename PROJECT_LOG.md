@@ -110,6 +110,29 @@ git push origin main
 
 ## 📅 五、更新日志
 
+### 2026-07-31 · v2.2 日历系统 + IndexedDB 图片存储 + 相册重构(GLM)
+
+**新增模块:**
+- ✅ 日历系统:[calendar.js](file:///js/calendar.js) 月历视图,聚合日记/心情/照片
+  - 日期格子显示心情 emoji(与日期并排) + 日记/照片彩色圆点标记
+  - 点击日期查看当天详情(心情/日记/照片),支持直接写日记
+  - 月份切换、今天定位、邻月补格
+- ✅ IndexedDB 图片存储:[photoStore.js](file:///js/photoStore.js) 封装 IndexedDB 操作
+  - 容量远大于 localStorage,支持 save/get/getMany/delete/isPhotoId
+  - 日记图片从 localStorage 迁移到 IndexedDB,entry.photos 存 img_ id
+  - 异步加载显示,删除日记时同步清理 IndexedDB 图片
+
+**功能优化:**
+- ✅ 日记编写:[diary.js](file:///js/diary.js) 支持图片上传(最多6张)、压缩、编辑/删除
+- ✅ 加载选择:[main.js](file:///js/main.js) 加载完成后显示"观看开场动画/直接进入"两个按钮
+- ✅ 相册重构:[gallery.js](file:///js/gallery.js) 改为两段式:缩略图网格(3列) → 点击全屏放大滑动浏览
+- ✅ 日历心情回退:无 MoodManager 记录时,回退显示日记自带的心情
+- ✅ 点击遮挡修复:[home.js](file:///js/home.js) 隐藏主流程遗留元素 + 禁用主画布指针事件
+
+**布局调整:**
+- 日历格子高度固定 38px,emoji 与日期并排,整月完整可见
+- 相册网格 3 列正方形缩略图,全屏查看器黑色背景
+
 ### 2026-07-31 · v2.1 致命 Bug 修复 + 音频可视化接入(GLM)
 
 **修复的致命问题:**
